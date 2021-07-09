@@ -1,37 +1,36 @@
 import base64
-
 import requests
-from requests_oauthlib import OAuth1
 
-consumer_key = '3nVuSoBZnx6U4vzUxf5w'
-consumer_secret = 'Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys'
-header_tz = "Asia/Tokyo"
-header_language = "ja-JP"
-adid = 'a7e8ab7c-22f4-4ec7-9d79-bf6a1fe9dc8d'
-device_id = '801d23384cb5451a'
-client_uuid = 'a3b9d2dc-f148-4f95-8a0f-36ffaf0879c7'
-twitter_app_ver = '9.0.0-release.00'
+from requests_oauthlib import OAuth1
 
 
 class TwitterFleetPy:
-    def __init__(self, identifier, password):
+    def __init__(self, identifier, password, oauthtoken=None, oauthsercret=None, kdt=None):
+        # Credential of Twitter
         self.identifier = identifier
         self.password = password
+        # Official API Token of Twitter for Android
         self.ck = '3nVuSoBZnx6U4vzUxf5w'
         self.cs = 'Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys'
-        self.oauth_token_key = None
-        self.oauth_token_secret = None
-        self.kdt = None
+        self.header_tz = 'Asia/Tokyo'
+        self.header_language = 'ja-JP'
+        self.twitter_app_ver = '9.0.0-release.00'
+        self.client_uuid = 'a3b9d2dc-f148-4f95-8a0f-36ffaf0879c7'
+        self.device_id = '801d23384cb5451a'
+        self.adid = 'a7e8ab7c-22f4-4ec7-9d79-bf6a1fe9dc8d'
+        self.oauth_token_key = oauthtoken
+        self.oauth_token_secret = oauthsercret
+        self.kdt = kdt
         self.req_header = {
             'user-agent': 'TwitterAndroid/9.0.0-release.00 (29000000-r-0) Android+SDK+built+for+x86/7.1.1 (Google;Android+SDK+built+for+x86;google;sdk_google_phone_x86;0;;1;2013)',
             'accept-encoding': 'gzip, deflate',
-            'x-twitter-client-adid': adid,
-            'timezone': header_tz,
+            'x-twitter-client-adid': self.adid,
+            'timezone': self.header_tz,
             'x-twitter-client-limit-ad-tracking': '0',
             'x-twitter-client': 'TwitterAndroid',
-            'x-twitter-client-version': twitter_app_ver,
-            'x-twitter-client-language': header_language,
-            'x-twitter-client-deviceid': device_id,
+            'x-twitter-client-version': self.twitter_app_ver,
+            'x-twitter-client-language': self.header_language,
+            'x-twitter-client-deviceid': self.device_id,
             'x-twitter-api-version': '5',
             'optimize-body': 'true',
             'authorization': '',
@@ -40,8 +39,13 @@ class TwitterFleetPy:
             'x-twitter-active-user': 'yes'
         }
 
-    def login(self):
+        if (self.oauth_token_key and self.oauth_token_secret and self.kdt) is not None:
+            self.oauth_token_key = oauthtoken
+            self.oauth_token_secret = oauthsercret
+            self.kdt = kdt
+            return
 
+        # ログイン処理
         header_auth = self.ck + ':' + self.cs
 
         header_auth = header_auth.encode()
@@ -86,10 +90,17 @@ class TwitterFleetPy:
         self.oauth_token_secret = xauth_req.json()['oauth_token_secret']
         self.kdt = xauth_req.json()['kdt']
 
-    def get_fleet_by_screenname(self, screenname):
+    def show_OauthToken(self):
+        if (self.oauth_token_key or self.oauth_token_secret or self.kdt) is None:
+            raise Exception('The Values are not set.')
+        print(f'OAuth token is {self.oauth_token_key}.')
+        print(f'OAuth token secret is {self.oauth_token_secret}.')
+        print(f'kdt is {self.kdt}.')
 
-        fleet_endpoint = "https://api.twitter.com/fleets/v1/user_fleets"
-        search_endpoint = "https://api.twitter.com/2/users/by/username/"
+    def get_fleet(self, screenname):
+
+        fleet_endpoint = 'https://api.twitter.com/fleets/v1/user_fleets/'
+        search_endpoint = 'https://api.twitter.com/2/users/by/username/'
         params = {
             'user_id': user_id,
         }
