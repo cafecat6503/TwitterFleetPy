@@ -128,6 +128,6 @@ class TwitterFleetPy:
         fleet_data = fleet.json()['fleet_threads']
         for i in fleet_data:
             for j in i['fleets']:
-                url_list.append(j['media_entity']['media_url_https'])
+                url_list.append((j['fleet_id'], j['media_entity']['media_url_https']))
 
         return url_list
