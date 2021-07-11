@@ -1,6 +1,6 @@
 import base64
-import requests
 
+import requests
 from requests_oauthlib import OAuth1
 
 
@@ -33,7 +33,6 @@ class TwitterFleetPy:
             'x-twitter-client-deviceid': self.device_id,
             'x-twitter-api-version': '5',
             'optimize-body': 'true',
-            'authorization': '',
             'accept': 'application/json',
             'x-b3-traceid': 'f164f5d9a8f19d09',
             'x-twitter-active-user': 'yes'
@@ -98,9 +97,37 @@ class TwitterFleetPy:
         print(f'kdt is {self.kdt}.')
 
     def get_fleet(self, screenname):
-
         fleet_endpoint = 'https://api.twitter.com/fleets/v1/user_fleets/'
-        search_endpoint = 'https://api.twitter.com/2/users/by/username/'
+
+        # Convert screen name to id
+        search_endpoint = 'https://api.twitter.com/1.1/users/show.json'
         params = {
-            'user_id': user_id,
+            'screen_name': screenname,
         }
+        req_header = {
+            'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAAFXzAwAAAAAAMHCxpeSDG1gLNLghVe8d74hl6k4%3DRUMF4xAQLsbeBhTSRrCiQpJtxoGWeyHrDb5te2jpGskWDFW82F'
+        }
+        user = requests.get(search_endpoint, params=params, headers=req_header)
+        if user.status_code != 200:
+            raise Exception(user.content.decode())
+        tw_id = user.json()['id_str']
+
+        # Get fleet
+
+        fleet_header = self.req_header
+
+        fleet_params = {
+            'user_id': tw_id,
+        }
+        fleet_auth = OAuth1(self.ck, self.cs, self.oauth_token_key, self.oauth_token_secret)
+        fleet = requests.get(fleet_endpoint, headers=fleet_header, params=fleet_params, auth=fleet_auth)
+        if fleet.status_code != 200:
+            raise Exception(fleet.content.decode())
+
+        url_list = []
+        fleet_data = fleet.json()['fleet_threads']
+        for i in fleet_data:
+            for j in i['fleets']:
+                url_list.append(j['media_entity']['media_url_https'])
+
+        return url_list
